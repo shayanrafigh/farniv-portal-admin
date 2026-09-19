@@ -689,6 +689,71 @@ app.post('/api/projects/:id/messages', (req, res) => {
   });
 });
 
+// Notifications: Get unread messages for Admin
+app.get('/api/admin/notifications', (_req, res) => {
+  const db = readDB();
+  const unreadMessages = db.messages
+    .filter((m: any) => !m.isRead && m.sender === 'customer')
+    .map((m: any) => {
+      const project = db.projects.find((p: any) => p.id === m.projectId);
+      const customer = db.customers.find((c: any) => c.id === project?.customerId);
+      return {
+        id: m.id,
+        projectId: m.projectId,
+        projectTitle: project ? project.title : 'پروژه فرنیو',
+        customerName: customer ? customer.name : (m.senderName || 'خریدار'),
+        customerPhone: customer ? customer.phone : '',
+        content: m.content,
+        createdAt: m.createdAt,
+      };
+    })
+    .reverse();
+
+  res.json({
+    unreadCount: unreadMessages.length,
+    notifications: unreadMessages,
+  });
+});
+
+// Notifications: Mark messages of a project as read
+app.post('/api/projects/:id/messages/mark-read', (req, res) => {
+  const { id: projectId } = req.params;
+  const db = readDB();
+  let updatedCount = 0;
+
+  db.messages.forEach((m: any) => {
+    if (m.projectId === projectId && m.sender === 'customer' && !m.isRead) {
+      m.isRead = true;
+      updatedCount++;
+    }
+  });
+
+  if (updatedCount > 0) {
+    writeDB(db);
+  }
+
+  res.json({ success: true, updatedCount });
+});
+
+// Notifications: Mark all unread messages as read
+app.post('/api/messages/mark-all-read', (_req, res) => {
+  const db = readDB();
+  let updatedCount = 0;
+
+  db.messages.forEach((m: any) => {
+    if (m.sender === 'customer' && !m.isRead) {
+      m.isRead = true;
+      updatedCount++;
+    }
+  });
+
+  if (updatedCount > 0) {
+    writeDB(db);
+  }
+
+  res.json({ success: true, updatedCount });
+});
+
 // Export PHP & MySQL standalone code package endpoint
 app.get('/api/php-deployment-package', (_req, res) => {
   const sqlScript = `-- ====================================================

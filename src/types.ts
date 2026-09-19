@@ -73,6 +73,16 @@ export interface UserPermissions {
   canViewAllProjects: boolean;
 }
 
+export interface AdminNotification {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  customerName: string;
+  customerPhone?: string;
+  content: string;
+  createdAt: string;
+}
+
 export interface AuthSession {
   role: 'admin' | 'customer';
   id: string;

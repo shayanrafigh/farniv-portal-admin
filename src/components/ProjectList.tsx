@@ -15,6 +15,7 @@ import {
   Sparkles,
   AlertCircle,
   Lock,
+  Bell,
 } from 'lucide-react';
 import { Project, AuthSession } from '../types';
 import { FarnivLogo } from './FarnivLogo';
@@ -22,7 +23,7 @@ import { FarnivLogo } from './FarnivLogo';
 interface ProjectListProps {
   projects: Project[];
   session: AuthSession;
-  onOpenProject: (projectId: string) => void;
+  onOpenProject: (projectId: string, initialTab?: 'stages' | 'chat') => void;
   onOpenNewProject: () => void;
   onDeleteProject?: (projectId: string) => void;
 }
@@ -35,14 +36,25 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   onDeleteProject,
 }) => {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'in_progress' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'in_progress' | 'completed' | 'unread'>('all');
+
+  const totalUnreadProjects = projects.filter((p) => (p.unreadMessagesCount || 0) > 0).length;
 
   const filtered = projects.filter((p) => {
     const matchesSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
       (p.customerName && p.customerName.toLowerCase().includes(search.toLowerCase())) ||
       p.safeType.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+    
+    let matchesStatus = true;
+    if (statusFilter === 'all') {
+      matchesStatus = true;
+    } else if (statusFilter === 'unread') {
+      matchesStatus = (p.unreadMessagesCount || 0) > 0;
+    } else {
+      matchesStatus = p.status === statusFilter;
+    }
+
     return matchesSearch && matchesStatus;
   });
 
@@ -171,6 +183,19 @@ export const ProjectList: React.FC<ProjectListProps> = ({
             >
               در حال ساخت
             </button>
+            {session.role === 'admin' && totalUnreadProjects > 0 && (
+              <button
+                onClick={() => setStatusFilter('unread')}
+                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                  statusFilter === 'unread'
+                    ? 'bg-red-600 text-white font-bold shadow-sm shadow-red-950/40'
+                    : 'text-red-400 hover:text-red-300 hover:bg-red-950/40'
+                }`}
+              >
+                <Bell className="w-3.5 h-3.5 animate-pulse" />
+                <span>پیام‌های جدید ({totalUnreadProjects})</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -212,9 +237,25 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                 <div>
                   {/* Card top tags */}
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-950/70 text-red-400 border border-red-800/70">
-                      {project.safeType}
-                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-red-950/70 text-red-400 border border-red-800/70">
+                        {project.safeType}
+                      </span>
+
+                      {session.role === 'admin' && (project.unreadMessagesCount || 0) > 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenProject(project.id, 'chat');
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-950/50 animate-pulse border border-red-400 transition-all cursor-pointer"
+                          title="مشاهده پیام‌های جدید خریدار"
+                        >
+                          <Bell className="w-3 h-3" />
+                          <span>{project.unreadMessagesCount} پیام جدید</span>
+                        </button>
+                      )}
+                    </div>
 
                     <span className="text-xs text-slate-400 font-mono" dir="ltr">
                       تحویل: {project.estimatedDelivery}
@@ -291,12 +332,21 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                   </button>
 
                   <button
-                    onClick={() => onOpenProject(project.id)}
-                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-700"
+                    onClick={() => onOpenProject(project.id, 'chat')}
+                    className={`py-2 px-3 rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer border ${
+                      session.role === 'admin' && (project.unreadMessagesCount || 0) > 0
+                        ? 'bg-red-950/90 border-red-600 text-red-200 hover:bg-red-900 shadow-sm shadow-red-950/60'
+                        : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                    }`}
                     title="گفت‌وگو و پیام‌ها"
                   >
                     <MessageSquare className="w-3.5 h-3.5 text-red-400" />
                     <span>پیام‌ها ({(project as any).messagesCount || 0})</span>
+                    {session.role === 'admin' && (project.unreadMessagesCount || 0) > 0 && (
+                      <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full font-mono animate-pulse">
+                        {project.unreadMessagesCount}
+                      </span>
+                    )}
                   </button>
 
                   {session.role === 'admin' && onDeleteProject && (

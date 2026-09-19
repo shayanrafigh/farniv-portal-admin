@@ -1,7 +1,8 @@
 import React from 'react';
 import { Lock, User, LogOut, Wrench, Users, Settings } from 'lucide-react';
-import { AuthSession } from '../types';
+import { AuthSession, AdminNotification } from '../types';
 import { FarnivLogo } from './FarnivLogo';
+import { AdminNotificationBell } from './AdminNotificationBell';
 
 interface NavbarProps {
   session: AuthSession;
@@ -9,6 +10,9 @@ interface NavbarProps {
   setActiveTab: (tab: 'projects' | 'customers' | 'settings' | 'messages') => void;
   onLogout: () => void;
   unreadCount?: number;
+  notifications?: AdminNotification[];
+  onOpenProjectChat?: (projectId: string) => void;
+  onMarkAllAsRead?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -16,6 +20,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onLogout,
+  unreadCount = 0,
+  notifications = [],
+  onOpenProjectChat = () => {},
+  onMarkAllAsRead = () => {},
 }) => {
   return (
     <header className="bg-slate-900 text-slate-100 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
@@ -55,6 +63,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Wrench className="w-4 h-4" />
                 <span>پروژه‌ها و خط تولید</span>
+                {session.role === 'admin' && unreadCount > 0 && (
+                  <span className="bg-red-950 text-red-300 border border-red-700/80 text-[10px] font-bold px-1.5 py-0.5 rounded-full font-mono">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
 
               {(session.role === 'admin' || session.permissions?.canManageCustomers) && (
@@ -89,8 +102,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </nav>
           )}
 
-          {/* User Profile & Logout */}
-          <div className="flex items-center gap-3">
+          {/* User Profile & Actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {session.role === 'admin' && (
+              <AdminNotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onOpenProjectChat={onOpenProjectChat}
+                onMarkAllAsRead={onMarkAllAsRead}
+              />
+            )}
+
             <div className="hidden sm:flex flex-col text-left text-xs">
               <span className="text-slate-200 font-semibold">{session.name}</span>
               <span className="text-slate-400 font-mono text-[11px] flex items-center justify-end gap-1">

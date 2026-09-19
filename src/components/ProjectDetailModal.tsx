@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   X,
   Plus,
@@ -24,6 +24,7 @@ interface ProjectDetailModalProps {
   stages: ProjectStage[];
   messages: ProjectMessage[];
   session: AuthSession;
+  initialTab?: 'stages' | 'chat';
   onClose: () => void;
   onAddStage: (formData: FormData) => Promise<void>;
   onToggleStageComplete: (stageId: string, currentStatus: boolean) => Promise<void>;
@@ -37,6 +38,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   stages,
   messages,
   session,
+  initialTab = 'stages',
   onClose,
   onAddStage,
   onToggleStageComplete,
@@ -44,9 +46,21 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   onSendMessage,
   onRefresh,
 }) => {
-  const [activeTab, setActiveTab] = useState<'stages' | 'chat'>('stages');
+  const [activeTab, setActiveTab] = useState<'stages' | 'chat'>(initialTab);
   const [showAddStageModal, setShowAddStageModal] = useState(false);
   const [selectedLightboxStage, setSelectedLightboxStage] = useState<ProjectStage | null>(null);
+
+  // Automatically mark messages as read for admin when viewing chat
+  useEffect(() => {
+    if (activeTab === 'chat' && session.role === 'admin') {
+      const hasUnread = messages.some((m) => !m.isRead && m.sender === 'customer');
+      if (hasUnread) {
+        fetch(`/api/projects/${project.id}/messages/mark-read`, { method: 'POST' })
+          .then(() => onRefresh())
+          .catch((err) => console.error('Failed to mark messages as read:', err));
+      }
+    }
+  }, [activeTab, project.id, messages, session.role, onRefresh]);
 
   // New Stage form state
   const [stageTitle, setStageTitle] = useState('');
@@ -198,7 +212,9 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
               <MessageSquare className="w-4 h-4" />
               <span>گفت‌وگو و استعلام ({messages.length})</span>
               {messages.some((m) => !m.isRead && m.sender !== session.role) && (
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full animate-pulse font-mono">
+                  {messages.filter((m) => !m.isRead && m.sender !== session.role).length} جدید
+                </span>
               )}
             </button>
           </div>

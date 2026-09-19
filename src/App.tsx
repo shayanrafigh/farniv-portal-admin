@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { AuthSession, Project, Customer, ProjectStage, ProjectMessage } from './types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Bell, MessageSquare, X } from 'lucide-react';
+import { AuthSession, Project, Customer, ProjectStage, ProjectMessage, AdminNotification } from './types';
 import { Navbar } from './components/Navbar';
 import { LoginModal } from './components/LoginModal';
 import { ProjectList } from './components/ProjectList';
@@ -28,6 +29,13 @@ export default function App() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Notifications state for Admin
+  const [adminNotifications, setAdminNotifications] = useState<AdminNotification[]>([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(0);
+  const [selectedProjectInitialTab, setSelectedProjectInitialTab] = useState<'stages' | 'chat'>('stages');
+  const [toastNotification, setToastNotification] = useState<AdminNotification | null>(null);
+  const prevUnreadCountRef = useRef<number>(0);
+
   // Active Project Detail modal state
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedProjectDetail, setSelectedProjectDetail] = useState<{
@@ -51,6 +59,9 @@ export default function App() {
     localStorage.removeItem('safebox_session');
     setSelectedProjectId(null);
     setSelectedProjectDetail(null);
+    setAdminNotifications([]);
+    setUnreadNotificationsCount(0);
+    setToastNotification(null);
   };
 
   // Fetch Projects
@@ -106,15 +117,55 @@ export default function App() {
     }
   }, []);
 
+  // Fetch Admin Notifications
+  const fetchAdminNotifications = useCallback(async (silent = true) => {
+    if (!session || session.role !== 'admin') return;
+    try {
+      const res = await fetch('/api/admin/notifications');
+      if (res.ok) {
+        const data = await res.json();
+        const unreadList: AdminNotification[] = data.notifications || [];
+        const newCount = data.unreadCount || 0;
+
+        // If new message arrived for admin and count increased, show toast
+        if (newCount > prevUnreadCountRef.current && unreadList.length > 0) {
+          const newest = unreadList[0];
+          setToastNotification(newest);
+          setTimeout(() => {
+            setToastNotification((curr) => (curr?.id === newest.id ? null : curr));
+          }, 6500);
+        }
+
+        prevUnreadCountRef.current = newCount;
+        setAdminNotifications(unreadList);
+        setUnreadNotificationsCount(newCount);
+      }
+    } catch (err) {
+      if (!silent) console.error('Failed to fetch admin notifications:', err);
+    }
+  }, [session]);
+
   // Initial load
   useEffect(() => {
     if (session) {
       fetchProjects();
       if (session.role === 'admin') {
         fetchCustomers();
+        fetchAdminNotifications(false);
       }
     }
-  }, [session, fetchProjects, fetchCustomers]);
+  }, [session, fetchProjects, fetchCustomers, fetchAdminNotifications]);
+
+  // Periodic polling for Admin to receive realtime unread notifications
+  useEffect(() => {
+    if (!session || session.role !== 'admin') return;
+
+    const interval = setInterval(() => {
+      fetchAdminNotifications(true);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [session, fetchAdminNotifications]);
 
   // Whenever selected project changes, load details
   useEffect(() => {
@@ -124,6 +175,26 @@ export default function App() {
       setSelectedProjectDetail(null);
     }
   }, [selectedProjectId, fetchProjectDetails]);
+
+  const handleOpenProject = (id: string, initialTab: 'stages' | 'chat' = 'stages') => {
+    setSelectedProjectInitialTab(initialTab);
+    setSelectedProjectId(id);
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const res = await fetch('/api/messages/mark-all-read', { method: 'POST' });
+      if (res.ok) {
+        await fetchAdminNotifications(true);
+        await fetchProjects();
+        if (selectedProjectId) {
+          await fetchProjectDetails(selectedProjectId);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    }
+  };
 
   // Handle Project Creation
   const handleCreateProject = async (projectData: any) => {
@@ -246,6 +317,10 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={handleLogout}
+        unreadCount={unreadNotificationsCount}
+        notifications={adminNotifications}
+        onOpenProjectChat={(projectId) => handleOpenProject(projectId, 'chat')}
+        onMarkAllAsRead={handleMarkAllAsRead}
       />
 
       {/* Main Container */}
@@ -254,7 +329,7 @@ export default function App() {
           <ProjectList
             projects={projects}
             session={session}
-            onOpenProject={(id) => setSelectedProjectId(id)}
+            onOpenProject={(id, tab) => handleOpenProject(id, tab || 'stages')}
             onOpenNewProject={() => setShowNewProjectModal(true)}
             onDeleteProject={(session.role === 'admin' || session.permissions?.canManageProjects) ? handleDeleteProject : undefined}
           />
@@ -288,13 +363,72 @@ export default function App() {
           stages={selectedProjectDetail.stages}
           messages={selectedProjectDetail.messages}
           session={session}
-          onClose={() => setSelectedProjectId(null)}
+          initialTab={selectedProjectInitialTab}
+          onClose={() => {
+            setSelectedProjectId(null);
+            fetchAdminNotifications(true);
+            fetchProjects();
+          }}
           onAddStage={handleAddStage}
           onToggleStageComplete={handleToggleStageComplete}
           onDeleteStage={handleDeleteStage}
           onSendMessage={handleSendMessage}
-          onRefresh={() => fetchProjectDetails(selectedProjectId!)}
+          onRefresh={async () => {
+            if (selectedProjectId) {
+              await fetchProjectDetails(selectedProjectId);
+            }
+            await fetchAdminNotifications(true);
+            await fetchProjects();
+          }}
         />
+      )}
+
+      {/* Realtime Notification Toast for Admin */}
+      {session.role === 'admin' && toastNotification && (
+        <div className="fixed bottom-6 left-6 z-50 max-w-sm w-full bg-slate-900 border-2 border-red-600 rounded-2xl shadow-2xl p-4 animate-bounce-short text-right">
+          <div className="flex items-start justify-between gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-red-950/60">
+              <Bell className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-red-400">اعلان پیام جدید خریدار</span>
+                <button
+                  onClick={() => setToastNotification(null)}
+                  className="text-slate-400 hover:text-white p-0.5 rounded cursor-pointer"
+                  title="بستن"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs font-bold text-slate-100 mt-1 truncate">
+                {toastNotification.customerName}
+              </p>
+              <div className="inline-block text-[10px] text-red-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 my-1 truncate max-w-full">
+                {toastNotification.projectTitle}
+              </div>
+              <p className="text-[11px] text-slate-300 line-clamp-2 bg-slate-950/60 p-2 rounded-lg border border-slate-800">
+                {toastNotification.content}
+              </p>
+              <div className="mt-2.5 flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    const pid = toastNotification.projectId;
+                    setToastNotification(null);
+                    handleOpenProject(pid, 'chat');
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm shadow-red-950/40"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>مشاهده و پاسخ</span>
+                </button>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {toastNotification.createdAt}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* New Project Modal */}
