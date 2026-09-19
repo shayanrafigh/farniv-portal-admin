@@ -64,8 +64,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
       <div className="w-full max-w-md bg-slate-900/95 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8 relative z-10 backdrop-blur-sm">
         {/* Header Branding - Farniv Official Logo */}
         <div className="text-center mb-6">
-          <div className="inline-block mb-3 p-3 bg-white rounded-2xl shadow-xl shadow-red-950/30 border border-slate-200">
-            <FarnivLogo variant="light" className="h-11 sm:h-12" />
+          <div className="flex justify-center items-center mb-4">
+            <FarnivLogo variant="dark" className="h-12 sm:h-14 drop-shadow-sm" />
           </div>
           <div className="flex items-center justify-center gap-2 mb-1">
             <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">

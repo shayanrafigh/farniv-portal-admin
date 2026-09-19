@@ -2,7 +2,7 @@ import React from 'react';
 
 interface FarnivLogoProps {
   className?: string;
-  variant?: 'dark' | 'light' | 'badge' | 'mark';
+  variant?: 'dark' | 'light' | 'white' | 'badge' | 'mark';
   height?: number | string;
 }
 
@@ -11,19 +11,35 @@ export const FarnivLogo: React.FC<FarnivLogoProps> = ({
   variant = 'light',
   height,
 }) => {
-  const isBadge = variant === 'badge';
-  const isLight = variant === 'light' || isBadge;
   const isMarkOnly = variant === 'mark';
 
-  // Subtitle color: dark on light backgrounds, crisp white/slate on dark backgrounds
-  const subtitleColor = isLight ? '#111827' : '#F8FAFC';
+  // Determine subtitle color based on placement:
+  // - on dark/slate surfaces ('dark' or default in dark UI): crisp white #F8FAFC
+  // - on explicit light surfaces ('light'): deep slate #0F172A
+  // - 'white': all white text
+  let subtitleColor = '#F8FAFC';
+  if (variant === 'light') {
+    subtitleColor = '#0F172A';
+  } else if (variant === 'dark') {
+    subtitleColor = '#F8FAFC';
+  }
+
+  // Official Farniv Brand Red
   const redColor = '#E51A22';
 
-  const svgContent = (
+  // viewBox tight bounding box:
+  // - Full logo with subtitle: x: 26, y: 14, width: 440, height: 132
+  // - Mark only: x: 26, y: 14, width: 440, height: 90
+  const viewBox = isMarkOnly ? '26 14 440 90' : '26 14 440 132';
+
+  return (
     <svg
-      viewBox={isMarkOnly ? '30 14 410 92' : '0 0 520 160'}
-      className={`w-auto select-none ${className}`}
-      style={height ? { height } : undefined}
+      viewBox={viewBox}
+      className={`select-none inline-block ${className}`}
+      style={{
+        height: height || undefined,
+        background: 'transparent',
+      }}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -41,7 +57,7 @@ export const FarnivLogo: React.FC<FarnivLogoProps> = ({
 
       {/* Official Farniv Red Logotype with Authentic Dynamic Forward Slant */}
       <g transform="skewX(-13.5) translate(40, 6)" fill={redColor}>
-        {/* Top horizontal red wing spanning across the wordmark with slanted right cut */}
+        {/* Top continuous horizontal red wing spanning across the wordmark with slanted cut */}
         <path d="M 68 18 
                  L 392 18 
                  L 384 33 
@@ -58,7 +74,7 @@ export const FarnivLogo: React.FC<FarnivLogoProps> = ({
                  C 54 44, 59 33, 72 33
                  Z" />
 
-        {/* Middle crossbar of F with slanted right cut */}
+        {/* Middle crossbar of F with slanted cut */}
         <path d="M 54 54 L 92 54 L 88 68 L 54 68 Z" />
 
         {/* Letter A with rounded apex */}
@@ -126,20 +142,10 @@ export const FarnivLogo: React.FC<FarnivLogoProps> = ({
 
       {/* Subtitle: SAFE BOX & VAULT PRODUCER */}
       {!isMarkOnly && (
-        <text x="246" y="142" className="farniv-sub-text" fill={subtitleColor}>
+        <text x="246" y="138" className="farniv-sub-text" fill={subtitleColor}>
           SAFE BOX &amp; VAULT PRODUCER
         </text>
       )}
     </svg>
   );
-
-  if (isBadge) {
-    return (
-      <div className="inline-flex items-center justify-center bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-md">
-        {svgContent}
-      </div>
-    );
-  }
-
-  return svgContent;
 };

@@ -448,8 +448,8 @@ export default function App() {
       <footer className="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-            <div className="bg-white px-2 py-1 rounded-lg border border-slate-700 shadow-sm shrink-0">
-              <FarnivLogo variant="light" className="h-5" />
+            <div className="shrink-0 flex items-center">
+              <FarnivLogo variant="dark" className="h-5 sm:h-6" />
             </div>
             <div className="text-right">
               <span className="font-bold text-slate-300">گروه صنعتی فرنیو (FARNIV)</span>

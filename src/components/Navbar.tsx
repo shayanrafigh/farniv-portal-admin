@@ -30,16 +30,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo and Brand - Farniv Industrial Group */}
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <div className="bg-white px-2.5 py-1.5 rounded-xl border border-slate-300 shadow-md shadow-red-950/30 shrink-0 flex items-center justify-center">
-              <FarnivLogo variant="light" className="h-6 sm:h-7" />
+          <div className="flex items-center gap-4">
+            <div className="shrink-0 flex items-center">
+              <FarnivLogo variant="dark" className="h-8 sm:h-9" />
             </div>
+            <div className="hidden sm:block w-px h-8 bg-slate-800" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-black text-lg sm:text-xl tracking-tight text-white">
+                <span className="font-black text-lg tracking-tight text-white">
                   گروه صنعتی فرنیو
                 </span>
-                <span className="text-[10px] font-bold bg-red-950/80 text-red-400 border border-red-800/60 px-2 py-0.5 rounded-full font-mono hidden sm:inline-block">
+                <span className="text-[10px] font-bold bg-red-950/80 text-red-400 border border-red-800/60 px-2 py-0.5 rounded-full font-mono hidden md:inline-block">
                   farniv.com
                 </span>
               </div>

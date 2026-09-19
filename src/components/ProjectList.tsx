@@ -18,7 +18,6 @@ import {
   Bell,
 } from 'lucide-react';
 import { Project, AuthSession } from '../types';
-import { FarnivLogo } from './FarnivLogo';
 
 interface ProjectListProps {
   projects: Project[];
@@ -69,14 +68,9 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-md">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="bg-white px-2.5 py-1 rounded-lg border border-slate-700 shadow-sm shrink-0">
-                  <FarnivLogo variant="light" className="h-6" />
-                </div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-950/80 text-red-400 border border-red-800/70">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>سامانه پیگیری مشتریان فرنیو (farniv.com)</span>
-                </div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-red-950/80 text-red-400 border border-red-800/70">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>سامانه پیگیری مشتریان فرنیو (farniv.com)</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-black text-white">
                 سلام {session.name} گرامی، وضعیت ساخت گاوصندوق شما

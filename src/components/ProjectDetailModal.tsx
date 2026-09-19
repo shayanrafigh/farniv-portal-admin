@@ -17,7 +17,6 @@ import {
 import { Project, ProjectStage, ProjectMessage, AuthSession } from '../types';
 import { ProjectChat } from './ProjectChat';
 import { ImageLightbox } from './ImageLightbox';
-import { FarnivLogo } from './FarnivLogo';
 
 interface ProjectDetailModalProps {
   project: Project;
@@ -137,17 +136,12 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </h2>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden sm:block bg-white px-2.5 py-1 rounded-xl border border-slate-700 shadow-sm">
-              <FarnivLogo variant="light" className="h-6" />
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Project Specifications Strip */}
