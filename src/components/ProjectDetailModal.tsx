@@ -9,14 +9,19 @@ import {
   Image as ImageIcon,
   Shield,
   Trash2,
+  Edit3,
   MessageSquare,
   Layers,
   Maximize2,
   Check,
+  AlertCircle,
 } from 'lucide-react';
 import { Project, ProjectStage, ProjectMessage, AuthSession } from '../types';
 import { ProjectChat } from './ProjectChat';
 import { ImageLightbox } from './ImageLightbox';
+import { PersianDateInput } from './PersianDateInput';
+import { EditStageModal } from './EditStageModal';
+import { validatePersianDate, getTodayPersianDate } from '../utils/dateValidator';
 
 interface ProjectDetailModalProps {
   project: Project;
@@ -26,6 +31,7 @@ interface ProjectDetailModalProps {
   initialTab?: 'stages' | 'chat';
   onClose: () => void;
   onAddStage: (formData: FormData) => Promise<void>;
+  onEditStage?: (stageId: string, formData: FormData) => Promise<void>;
   onToggleStageComplete: (stageId: string, currentStatus: boolean) => Promise<void>;
   onDeleteStage: (stageId: string) => Promise<void>;
   onSendMessage: (content: string, replyToId: string | null) => Promise<void>;
@@ -40,6 +46,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   initialTab = 'stages',
   onClose,
   onAddStage,
+  onEditStage,
   onToggleStageComplete,
   onDeleteStage,
   onSendMessage,
@@ -47,6 +54,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'stages' | 'chat'>(initialTab);
   const [showAddStageModal, setShowAddStageModal] = useState(false);
+  const [editingStage, setEditingStage] = useState<ProjectStage | null>(null);
   const [selectedLightboxStage, setSelectedLightboxStage] = useState<ProjectStage | null>(null);
 
   // Automatically mark messages as read for admin when viewing chat
@@ -64,9 +72,8 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   // New Stage form state
   const [stageTitle, setStageTitle] = useState('');
   const [stageDesc, setStageDesc] = useState('');
-  const [stageDate, setStageDate] = useState(
-    new Intl.DateTimeFormat('fa-IR').format(new Date())
-  );
+  const [stageDate, setStageDate] = useState(getTodayPersianDate());
+  const [stageDateError, setStageDateError] = useState<string | null>(null);
   const [stageCompleted, setStageCompleted] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -86,7 +93,19 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
   const handleSubmitNewStage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stageTitle.trim()) return;
+    if (!stageTitle.trim()) {
+      alert('لطفاً عنوان مرحله ساخت را وارد نمایید.');
+      return;
+    }
+
+    // Validate Persian Date
+    if (stageDate.trim()) {
+      const dateCheck = validatePersianDate(stageDate.trim());
+      if (!dateCheck.valid) {
+        setStageDateError(dateCheck.error || 'تاریخ نامعتبر است.');
+        return;
+      }
+    }
 
     setIsUploading(true);
     try {
@@ -104,6 +123,8 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       setShowAddStageModal(false);
       setStageTitle('');
       setStageDesc('');
+      setStageDate(getTodayPersianDate());
+      setStageDateError(null);
       setSelectedFile(null);
       setPreviewUrl(null);
     } catch (err) {
@@ -310,7 +331,7 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
                         {/* Admin Action bar for this stage */}
                         {session.role === 'admin' && (
-                          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                          <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
                             <button
                               onClick={() => onToggleStageComplete(stage.id, stage.completed)}
                               className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-semibold transition-colors cursor-pointer ${
@@ -325,17 +346,31 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                               </span>
                             </button>
 
-                            <button
-                              onClick={() => {
-                                if (confirm('آیا از حذف این مرحله و تصویر آن اطمینان دارید؟')) {
-                                  onDeleteStage(stage.id);
-                                }
-                              }}
-                              className="text-slate-500 hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>حذف مرحله</span>
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {/* Edit Stage Button */}
+                              <button
+                                onClick={() => setEditingStage(stage)}
+                                className="px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800/60 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                title="ویرایش اطلاعات، تاریخ و عکس مرحله"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>ویرایش مرحله</span>
+                              </button>
+
+                              {/* Delete Stage Button */}
+                              <button
+                                onClick={() => {
+                                  if (confirm(`آیا از حذف مرحله «${stage.title}» و تصویر آن اطمینان دارید؟`)) {
+                                    onDeleteStage(stage.id);
+                                  }
+                                }}
+                                className="px-2.5 py-1 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-950/50 flex items-center gap-1 transition-colors cursor-pointer"
+                                title="حذف این مرحله"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                                <span>حذف مرحله</span>
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -405,21 +440,24 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    تاریخ ثبت مرحله
-                  </label>
-                  <input
-                    type="text"
+                  <PersianDateInput
+                    id="new-stage-date-input"
+                    label="تاریخ ثبت مرحله"
                     value={stageDate}
-                    onChange={(e) => setStageDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 text-xs font-mono text-center focus:border-red-500 focus:outline-none"
+                    onChange={(newVal) => {
+                      setStageDate(newVal);
+                      setStageDateError(null);
+                    }}
+                    required
+                    placeholder="۱۴۰۴/۱۲/۲۵"
+                    showTodayBtn={true}
                   />
                 </div>
 
-                <div className="flex items-center pt-5">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-300">
+                <div className="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5 flex items-center">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-300 w-full">
                     <input
                       type="checkbox"
                       checked={stageCompleted}
@@ -430,6 +468,13 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                   </label>
                 </div>
               </div>
+
+              {stageDateError && (
+                <div className="p-2.5 rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span>{stageDateError}</span>
+                </div>
+              )}
 
               {/* Photo Upload Area */}
               <div>
@@ -477,7 +522,10 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
               <div className="pt-2 flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowAddStageModal(false)}
+                  onClick={() => {
+                    setShowAddStageModal(false);
+                    setStageDateError(null);
+                  }}
                   className="flex-1 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer border border-slate-700"
                 >
                   انصراف
@@ -500,6 +548,22 @@ export const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Edit Stage Modal for Admin */}
+      {editingStage && (
+        <EditStageModal
+          stage={editingStage}
+          onClose={() => setEditingStage(null)}
+          onSave={async (formData) => {
+            if (onEditStage) {
+              await onEditStage(editingStage.id, formData);
+            }
+          }}
+          onDelete={async () => {
+            await onDeleteStage(editingStage.id);
+          }}
+        />
       )}
 
       {/* Lightbox for large photo preview */}

@@ -278,9 +278,26 @@ export default function App() {
   // Delete Stage
   const handleDeleteStage = async (stageId: string) => {
     if (!selectedProjectId) return;
-    await fetch(`/api/stages/${stageId}`, {
+    const res = await fetch(`/api/stages/${stageId}`, {
       method: 'DELETE',
     });
+    if (!res.ok) {
+      throw new Error('خطا در حذف مرحله');
+    }
+    await fetchProjectDetails(selectedProjectId);
+    await fetchProjects();
+  };
+
+  // Edit Stage (details, order, date, status, or image)
+  const handleEditStage = async (stageId: string, formData: FormData) => {
+    if (!selectedProjectId) return;
+    const res = await fetch(`/api/stages/${stageId}`, {
+      method: 'PUT',
+      body: formData,
+    });
+    if (!res.ok) {
+      throw new Error('خطا در ویرایش اطلاعات مرحله');
+    }
     await fetchProjectDetails(selectedProjectId);
     await fetchProjects();
   };
@@ -370,6 +387,7 @@ export default function App() {
             fetchProjects();
           }}
           onAddStage={handleAddStage}
+          onEditStage={handleEditStage}
           onToggleStageComplete={handleToggleStageComplete}
           onDeleteStage={handleDeleteStage}
           onSendMessage={handleSendMessage}

@@ -642,8 +642,8 @@ app.post('/api/projects/:id/stages', upload.single('image'), (req, res) => {
   });
 });
 
-// Stages: Toggle completion or update
-app.put('/api/stages/:id', (req, res) => {
+// Stages: Toggle completion or update with optional new image upload
+app.put('/api/stages/:id', upload.single('image'), (req, res) => {
   const { id } = req.params;
   const db = readDB();
   const stage = db.stages.find((s: any) => s.id === id);
@@ -651,13 +651,43 @@ app.put('/api/stages/:id', (req, res) => {
     return res.status(404).json({ error: 'مرحله یافت نشد.' });
   }
 
-  if (req.body.completed !== undefined) stage.completed = req.body.completed;
-  if (req.body.title !== undefined) stage.title = req.body.title;
-  if (req.body.description !== undefined) stage.description = req.body.description;
-  if (req.body.date !== undefined) stage.date = req.body.date;
+  if (req.body.completed !== undefined) {
+    stage.completed = req.body.completed === 'true' || req.body.completed === true;
+  }
+  if (req.body.title !== undefined && req.body.title.trim()) {
+    stage.title = req.body.title.trim();
+  }
+  if (req.body.description !== undefined) {
+    stage.description = req.body.description.trim();
+  }
+  if (req.body.date !== undefined && req.body.date.trim()) {
+    stage.date = req.body.date.trim();
+  }
+  if (req.body.order !== undefined) {
+    const parsedOrder = parseInt(req.body.order, 10);
+    if (!isNaN(parsedOrder)) stage.order = parsedOrder;
+  }
+
+  // If a new image is uploaded, remove old uploaded file if local
+  if (req.file) {
+    if (stage.imageUrl && stage.imageUrl.startsWith('/uploads/')) {
+      const oldFilename = path.basename(stage.imageUrl);
+      const oldFilePath = path.join(UPLOADS_DIR, oldFilename);
+      if (fs.existsSync(oldFilePath)) {
+        try {
+          fs.unlinkSync(oldFilePath);
+        } catch (e) {
+          console.warn('Could not delete old image file:', e);
+        }
+      }
+    }
+    stage.imageUrl = `/uploads/${req.file.filename}`;
+  } else if (req.body.imageUrl && req.body.imageUrl.trim()) {
+    stage.imageUrl = req.body.imageUrl.trim();
+  }
 
   writeDB(db);
-  res.json({ success: true, stage });
+  res.json({ success: true, stage, message: 'اطلاعات مرحله با موفقیت به‌روزرسانی شد.' });
 });
 
 // Stages: Delete

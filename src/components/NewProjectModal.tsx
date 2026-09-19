@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X, Shield, Check } from 'lucide-react';
+import { X, Shield, Check, AlertCircle } from 'lucide-react';
 import { Customer } from '../types';
+import { PersianDateInput } from './PersianDateInput';
+import { validatePersianDate, getTodayPersianDate } from '../utils/dateValidator';
 
 interface NewProjectModalProps {
   customers: Customer[];
@@ -21,12 +23,11 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
   const [dimensions, setDimensions] = useState('ارتفاع ۱۶۰ × عرض ۸۰ × عمق ۷۰ سانتی‌متر');
   const [weight, setWeight] = useState('۸۵۰ کیلوگرم');
   const [lockType, setLockType] = useState('سیستم رمزی دیجیتال + کنترل هوشمند بال اسکرو');
-  const [startDate, setStartDate] = useState(
-    new Intl.DateTimeFormat('fa-IR').format(new Date())
-  );
+  const [startDate, setStartDate] = useState(getTodayPersianDate());
   const [estimatedDelivery, setEstimatedDelivery] = useState('۱۴۰۵/۰۲/۱۵');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +36,25 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
       return;
     }
 
+    // Validate start date if provided
+    if (startDate.trim()) {
+      const vStart = validatePersianDate(startDate.trim());
+      if (!vStart.valid) {
+        setDateError(`تاریخ شروع نامعتبر است: ${vStart.error}`);
+        return;
+      }
+    }
+
+    // Validate estimated delivery date if provided
+    if (estimatedDelivery.trim()) {
+      const vEnd = validatePersianDate(estimatedDelivery.trim());
+      if (!vEnd.valid) {
+        setDateError(`تاریخ تحویل نامعتبر است: ${vEnd.error}`);
+        return;
+      }
+    }
+
+    setDateError(null);
     setSubmitting(true);
     try {
       await onCreateProject({
@@ -195,29 +215,42 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                تاریخ شروع تولید
-              </label>
-              <input
-                type="text"
+              <PersianDateInput
+                id="project-start-date-input"
+                label="تاریخ شروع تولید"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3.5 py-2 text-xs font-mono text-center focus:border-red-500 focus:outline-none"
+                onChange={(val) => {
+                  setStartDate(val);
+                  setDateError(null);
+                }}
+                required
+                placeholder="۱۴۰۴/۱۲/۲۵"
+                showTodayBtn={true}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                تاریخ تخمینی تحویل
-              </label>
-              <input
-                type="text"
+              <PersianDateInput
+                id="project-estimated-delivery-input"
+                label="تاریخ تخمینی تحویل"
                 value={estimatedDelivery}
-                onChange={(e) => setEstimatedDelivery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3.5 py-2 text-xs font-mono text-center focus:border-red-500 focus:outline-none"
+                onChange={(val) => {
+                  setEstimatedDelivery(val);
+                  setDateError(null);
+                }}
+                required
+                placeholder="۱۴۰۵/۰۲/۱۵"
+                showTodayBtn={false}
               />
             </div>
           </div>
+
+          {dateError && (
+            <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{dateError}</span>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
