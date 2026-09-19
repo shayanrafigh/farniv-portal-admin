@@ -8,19 +8,20 @@ interface FarnivLogoProps {
 
 export const FarnivLogo: React.FC<FarnivLogoProps> = ({
   className = '',
-  variant = 'dark',
+  variant = 'light',
   height,
 }) => {
   const isBadge = variant === 'badge';
   const isLight = variant === 'light' || isBadge;
   const isMarkOnly = variant === 'mark';
 
-  const subtitleColor = isLight ? '#1e293b' : '#f1f5f9';
-  const redColor = '#E31E24';
+  // Subtitle color: dark on light backgrounds, crisp white/slate on dark backgrounds
+  const subtitleColor = isLight ? '#111827' : '#F8FAFC';
+  const redColor = '#E51A22';
 
   const svgContent = (
     <svg
-      viewBox={isMarkOnly ? '0 10 420 85' : '0 10 460 125'}
+      viewBox={isMarkOnly ? '30 14 410 92' : '0 0 520 160'}
       className={`w-auto select-none ${className}`}
       style={height ? { height } : undefined}
       fill="none"
@@ -28,46 +29,104 @@ export const FarnivLogo: React.FC<FarnivLogoProps> = ({
     >
       <defs>
         <style>{`
-          .farniv-sub {
+          .farniv-sub-text {
             font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 15.5px;
-            font-weight: 600;
-            letter-spacing: 0.36em;
+            font-weight: 500;
+            letter-spacing: 0.32em;
             text-anchor: middle;
           }
         `}</style>
       </defs>
 
-      {/* Farniv Red Logotype with authentic forward dynamic slant matching official brand */}
-      <g transform="skewX(-14) translate(38, 0)" fill={redColor}>
-        {/* Top horizontal red wing spanning across the wordmark */}
-        <path d="M 68 20 L 348 20 L 342 35 L 70 35 Z" />
+      {/* Official Farniv Red Logotype with Authentic Dynamic Forward Slant */}
+      <g transform="skewX(-13.5) translate(40, 6)" fill={redColor}>
+        {/* Top horizontal red wing spanning across the wordmark with slanted right cut */}
+        <path d="M 68 18 
+                 L 392 18 
+                 L 384 33 
+                 L 70 33 
+                 Z" />
 
-        {/* Letter F with smooth rounded top-left curve connecting to the top wing */}
-        <path d="M 70 20 C 48 20, 36 32, 36 50 L 36 90 L 54 90 L 54 55 C 54 44, 60 35, 72 35 Z" />
+        {/* Letter F with smooth rounded top-left and bottom-left curves */}
+        <path d="M 70 18
+                 C 45 18, 32 30, 32 50
+                 L 32 94
+                 C 32 97, 34 98, 38 98
+                 L 54 98
+                 L 54 58
+                 C 54 44, 59 33, 72 33
+                 Z" />
 
-        {/* Middle crossbar of F connecting towards A */}
-        <rect x="54" y="52" width="34" height="15" />
+        {/* Middle crossbar of F with slanted right cut */}
+        <path d="M 54 54 L 92 54 L 88 68 L 54 68 Z" />
 
-        {/* Letter A */}
-        <path d="M 78 90 L 100 35 L 124 35 L 146 90 L 127 90 L 121 73 L 102 73 L 96 90 Z M 106 58 L 117 58 L 111 44 Z" />
+        {/* Letter A with rounded apex */}
+        <path d="M 78 98 
+                 L 100 36 
+                 L 124 36 
+                 L 146 98 
+                 L 127 98 
+                 L 122 80 
+                 L 104 80 
+                 L 98 98 
+                 Z 
+                 M 108 64 
+                 L 118 64 
+                 L 113 46 
+                 Z" />
 
-        {/* Letter R */}
-        <path d="M 152 35 L 186 35 C 198 35, 204 42, 204 53 C 204 62, 197 68, 186 69 L 207 90 L 187 90 L 170 70 L 169 70 L 169 90 L 152 90 Z M 169 57 L 183 57 C 188 57, 191 55, 191 52 C 191 48, 188 47, 183 47 L 169 47 Z" />
+        {/* Letter R with curved upper loop and slanted diagonal leg */}
+        <path d="M 152 36 
+                 L 186 36 
+                 C 199 36, 206 43, 206 54 
+                 C 206 63, 199 69, 188 70 
+                 L 209 98 
+                 L 188 98 
+                 L 170 75 
+                 L 170 98 
+                 L 152 98 
+                 Z 
+                 M 170 58 
+                 L 184 58 
+                 C 188 58, 191 56, 191 53 
+                 C 191 49, 188 48, 183 48 
+                 L 170 48 
+                 Z" />
 
         {/* Letter N */}
-        <path d="M 213 35 L 230 35 L 253 73 L 253 35 L 270 35 L 270 90 L 252 90 L 230 52 L 230 90 L 213 90 Z" />
+        <path d="M 214 36 
+                 L 232 36 
+                 L 256 79 
+                 L 256 36 
+                 L 274 36 
+                 L 274 98 
+                 L 256 98 
+                 L 232 55 
+                 L 232 98 
+                 L 214 98 
+                 Z" />
 
         {/* Letter I */}
-        <path d="M 280 35 L 297 35 L 297 90 L 280 90 Z" />
+        <rect x="284" y="36" width="18" height="62" />
 
-        {/* Letter V */}
-        <path d="M 307 35 L 325 35 L 338 74 L 351 35 L 369 35 L 348 90 L 328 90 Z" />
+        {/* Letter U (Official brand letter with smooth bottom curve) */}
+        <path d="M 312 36 
+                 L 330 36 
+                 L 330 74 
+                 C 330 82, 335 86, 345 86 
+                 C 355 86, 360 82, 360 74 
+                 L 360 36 
+                 L 378 36 
+                 L 378 74 
+                 C 378 91, 366 99, 345 99 
+                 C 324 99, 312 91, 312 74 
+                 Z" />
       </g>
 
       {/* Subtitle: SAFE BOX & VAULT PRODUCER */}
       {!isMarkOnly && (
-        <text x="232" y="122" className="farniv-sub" fill={subtitleColor}>
+        <text x="246" y="142" className="farniv-sub-text" fill={subtitleColor}>
           SAFE BOX &amp; VAULT PRODUCER
         </text>
       )}
@@ -76,7 +135,7 @@ export const FarnivLogo: React.FC<FarnivLogoProps> = ({
 
   if (isBadge) {
     return (
-      <div className="inline-flex items-center justify-center bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-md">
+      <div className="inline-flex items-center justify-center bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-md">
         {svgContent}
       </div>
     );

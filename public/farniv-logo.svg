@@ -1,103 +1,104 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 140" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 160" width="100%" height="100%">
   <defs>
     <style>
-      .farniv-red { fill: #E31E24; }
-      .farniv-subtitle {
+      .farniv-red { fill: #E51A22; }
+      .farniv-sub {
         font-family: 'Montserrat', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 15px;
-        font-weight: 600;
-        letter-spacing: 0.34em;
+        font-size: 15.5px;
+        font-weight: 500;
+        letter-spacing: 0.32em;
         text-anchor: middle;
       }
     </style>
   </defs>
 
-  <!-- Farniv Red Logotype with authentic forward dynamic slant -->
-  <g transform="skewX(-14) translate(38, 0)" class="farniv-red">
-    <!-- Top horizontal red wing spanning across the wordmark -->
-    <path d="M 68 20 
-             L 348 20 
-             L 342 35 
-             L 70 35 
+  <!-- Farniv Official Red Wordmark with Authentic Forward Dynamic Slant -->
+  <g transform="skewX(-13.5) translate(40, 6)" class="farniv-red">
+    <!-- Top continuous wing spanning across the wordmark with slanted right cut -->
+    <path d="M 68 18 
+             L 392 18 
+             L 384 33 
+             L 70 33 
              Z" />
 
-    <!-- Letter F with smooth rounded top-left curve connecting to the top wing -->
-    <path d="M 70 20
-             C 48 20, 36 32, 36 50
-             L 36 90
-             L 54 90
-             L 54 55
-             C 54 44, 60 35, 72 35
+    <!-- Letter F with rounded top-left and bottom-left curves -->
+    <path d="M 70 18
+             C 45 18, 32 30, 32 50
+             L 32 94
+             C 32 97, 34 98, 38 98
+             L 54 98
+             L 54 58
+             C 54 44, 59 33, 72 33
              Z" />
     
-    <!-- Middle crossbar of F connecting towards A -->
-    <rect x="54" y="52" width="34" height="15" />
+    <!-- Middle crossbar of F with slanted right cut -->
+    <path d="M 54 54 L 92 54 L 88 68 L 54 68 Z" />
 
-    <!-- Letter A -->
-    <path d="M 78 90 
-             L 100 35 
-             L 124 35 
-             L 146 90 
-             L 127 90 
-             L 121 73 
-             L 102 73 
-             L 96 90 
+    <!-- Letter A with rounded apex -->
+    <path d="M 78 98 
+             L 100 36 
+             L 124 36 
+             L 146 98 
+             L 127 98 
+             L 122 80 
+             L 104 80 
+             L 98 98 
              Z 
-             M 106 58 
-             L 117 58 
-             L 111 44 
+             M 108 64 
+             L 118 64 
+             L 113 46 
              Z" />
 
-    <!-- Letter R -->
-    <path d="M 152 35 
-             L 186 35 
-             C 198 35, 204 42, 204 53 
-             C 204 62, 197 68, 186 69 
-             L 207 90 
-             L 187 90 
-             L 170 70 
-             L 169 70 
-             L 169 90 
-             L 152 90 
+    <!-- Letter R with curved loop and slanted leg -->
+    <path d="M 152 36 
+             L 186 36 
+             C 199 36, 206 43, 206 54 
+             C 206 63, 199 69, 188 70 
+             L 209 98 
+             L 188 98 
+             L 170 75 
+             L 170 98 
+             L 152 98 
              Z 
-             M 169 57 
-             L 183 57 
-             C 188 57, 191 55, 191 52 
-             C 191 48, 188 47, 183 47 
-             L 169 47 
+             M 170 58 
+             L 184 58 
+             C 188 58, 191 56, 191 53 
+             C 191 49, 188 48, 183 48 
+             L 170 48 
              Z" />
 
     <!-- Letter N -->
-    <path d="M 213 35 
-             L 230 35 
-             L 253 73 
-             L 253 35 
-             L 270 35 
-             L 270 90 
-             L 252 90 
-             L 230 52 
-             L 230 90 
-             L 213 90 
+    <path d="M 214 36 
+             L 232 36 
+             L 256 79 
+             L 256 36 
+             L 274 36 
+             L 274 98 
+             L 256 98 
+             L 232 55 
+             L 232 98 
+             L 214 98 
              Z" />
 
     <!-- Letter I -->
-    <path d="M 280 35 
-             L 297 35 
-             L 297 90 
-             L 280 90 
-             Z" />
+    <rect x="284" y="36" width="18" height="62" />
 
-    <!-- Letter V -->
-    <path d="M 307 35 
-             L 325 35 
-             L 338 74 
-             L 351 35 
-             L 369 35 
-             L 348 90 
-             L 328 90 
+    <!-- Letter U (Official brand letter with smooth bottom curve) -->
+    <path d="M 312 36 
+             L 330 36 
+             L 330 74 
+             C 330 82, 335 86, 345 86 
+             C 355 86, 360 82, 360 74 
+             L 360 36 
+             L 378 36 
+             L 378 74 
+             C 378 91, 366 99, 345 99 
+             C 324 99, 312 91, 312 74 
              Z" />
   </g>
 
   <!-- Subtitle: SAFE BOX & VAULT PRODUCER -->
-  <text x="230" y="122" class="farniv-subtitle" fill="#1e293b">SAFE BOX &amp; VAULT PRODUCER</text>
+  <text x="246" y="142" class="farniv-sub" fill="#111827">
+    SAFE BOX &amp; VAULT PRODUCER
+  </text>
 </svg>

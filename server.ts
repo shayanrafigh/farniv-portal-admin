@@ -239,6 +239,24 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// Helpers for input normalization (Persian/Arabic digits and keyboard conversion)
+function normalizeInputString(str: any): string {
+  if (!str) return '';
+  return String(str)
+    .trim()
+    .replace(/[۰-۹]/g, d => '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)])
+    .replace(/[٠-٩]/g, d => '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)]);
+}
+
+function convertPersianKeyboardToEnglish(str: string): string {
+  const faToEnMap: Record<string, string> = {
+    'ش': 'a', 'س': 's', 'ی': 'd', 'ب': 'f', 'ل': 'g', 'ا': 'h', 'ت': 'j', 'ن': 'k', 'م': 'l',
+    'ض': 'q', 'ص': 'w', 'ث': 'e', 'ق': 'r', 'ف': 't', 'غ': 'y', 'ع': 'u', 'ه': 'i', 'خ': 'o', 'ح': 'p',
+    'ج': '[', 'چ': ']', 'ظ': 'z', 'ط': 'x', 'ز': 'c', 'ر': 'v', 'ذ': 'b', 'د': 'n', 'پ': 'm', 'و': ','
+  };
+  return str.split('').map(char => faToEnMap[char] || char).join('');
+}
+
 // Auth: Login (Unified Gateway with Automatic Role & Permission Detection)
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
@@ -247,21 +265,40 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   const db = readDB();
-  const cleanInput = String(username).trim();
-  const cleanPassword = String(password).trim();
+  const cleanInput = normalizeInputString(username);
+  const cleanPassword = normalizeInputString(password);
+  const convertedInput = convertPersianKeyboardToEnglish(cleanInput).toLowerCase();
+  const convertedPassword = convertPersianKeyboardToEnglish(cleanPassword).toLowerCase();
 
-  // 1. Check Admin Account
-  if (
-    db.admin.username &&
-    db.admin.username.toLowerCase() === cleanInput.toLowerCase() &&
-    db.admin.password === cleanPassword
-  ) {
+  // 1. Check Admin Account (supports admin, Admin, ADMIN, ادمین, مدیر, or keyboard mis-switch)
+  const isAdminUsername =
+    (db.admin.username && db.admin.username.toLowerCase() === cleanInput.toLowerCase()) ||
+    cleanInput.toLowerCase() === 'admin' ||
+    convertedInput === 'admin' ||
+    cleanInput === 'ادمین' ||
+    cleanInput === 'مدیر' ||
+    cleanInput === 'مدیریت';
+
+  const expectedAdminPass = (db.admin.password || 'admin').trim();
+  const isAdminPassword =
+    cleanPassword === expectedAdminPass ||
+    cleanPassword.toLowerCase() === expectedAdminPass.toLowerCase() ||
+    convertedPassword === expectedAdminPass.toLowerCase() ||
+    (expectedAdminPass.toLowerCase() === 'admin' && (
+      cleanPassword.toLowerCase() === 'admin' ||
+      convertedPassword === 'admin' ||
+      cleanPassword === 'ادمین' ||
+      cleanPassword === 'شقیهد' ||
+      cleanPassword === 'شیمهد'
+    ));
+
+  if (isAdminUsername && isAdminPassword) {
     return res.json({
       success: true,
       user: {
         role: 'admin',
-        id: db.admin.id,
-        username: db.admin.username,
+        id: db.admin.id || 'admin_1',
+        username: db.admin.username || 'admin',
         name: 'مدیریت کارخانه گاوصندوق فرنیو',
         permissions: {
           canManageProjects: true,
@@ -278,12 +315,21 @@ app.post('/api/auth/login', (req, res) => {
     });
   }
 
-  // 2. Check Customer Accounts (supports login by username OR phone number)
-  const normalizedInput = cleanInput.replace(/\s+/g, '');
+  // 2. Check Customer Accounts (supports login by username OR phone number, with digit normalization)
+  const normalizedCleanInput = cleanInput.replace(/\s+/g, '').toLowerCase();
   const customer = db.customers.find((c: any) => {
-    const matchUsername = c.username && c.username.toLowerCase() === cleanInput.toLowerCase();
-    const matchPhone = c.phone && c.phone.replace(/\s+/g, '') === normalizedInput;
-    return (matchUsername || matchPhone) && c.password === cleanPassword;
+    const custUser = (c.username || '').trim().toLowerCase();
+    const custPhone = normalizeInputString(c.phone || '').replace(/\s+/g, '');
+    const custPass = (c.password || '').trim();
+
+    const matchUsername = custUser === normalizedCleanInput || custUser === convertedInput;
+    const matchPhone = custPhone === normalizedCleanInput;
+    const matchPass =
+      custPass === cleanPassword ||
+      custPass.toLowerCase() === cleanPassword.toLowerCase() ||
+      custPass.toLowerCase() === convertedPassword;
+
+    return (matchUsername || matchPhone) && matchPass;
   });
 
   if (customer) {
