@@ -1,0 +1,6 @@
+{
+  "name": "سامانه مدیریت و رهگیری گاوصندوق فرنیو",
+  "description": "سامانه رهگیری خط تولید و مراحل ساخت گاوصندوق‌های آسانسوری و نسوز گروه صنعتی فرنیو (farniv.com)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
